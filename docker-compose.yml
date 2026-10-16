@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  psx-engine-go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=production
+      - PSX_BASE_URL=https://dps.psx.com.pk
+      - DATABASE_URL=postgres://postgres:psx_secure_pass@postgres:5432/psx_db?sslmode=disable
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: psx_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=psx_secure_pass
+      - POSTGRES_DB=psx_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations/000001_init_schema.up.sql:/docker-entrypoint-initdb.d/01_init_schema.sql
+    restart: always
+
+volumes:
+  postgres_data:
